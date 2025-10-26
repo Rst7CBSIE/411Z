@@ -1,6 +1,8 @@
-namespace DZ_S1
+﻿namespace DZ_S1
 {
     using System.Collections;
+    using System.Text;
+
     public partial class Form1 : Form
     {
         private DrugList Storage;
@@ -11,25 +13,65 @@ namespace DZ_S1
             Storage = new DrugList();
             Bill = new DrugList();
         }
-
+        //Загрузка бази даних
         private void btnLoadDB_Click(object sender, EventArgs e)
         {
+            CryptoGamma G = new CryptoGamma();
+            BinaryReader? R = new BinaryReader(File.OpenRead("database"));
+            if (R == null)
+            {
+                MessageBox.Show("Can't load database!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             Storage.Clear();
-            Drug d;
-            d = new Drug("Ibuprofen", 12345678, 1488);
-            Storage.Add(d, 5);
+            //Читаємо базу
+            byte[] b = R.ReadBytes((int)R.BaseStream.Length);
+            //Дешифрування
+            for (int i = 0; i < b.Length; i++)
+            {
+                b[i] ^= G.Get();
+            }
+            //Ітеруємо усі записи
+            for (int i = 0, sz=b.Length; i<sz;)
+            {
+                UInt64 scancode;
+                UInt32 price;
+                UInt32 count;
+                int nl;
+                string name;
+                if (i > sz - 8) break;
+                scancode=BitConverter.ToUInt64(b,i);
+                i += 8;
+                if (i > sz - 4) break;
+                price = BitConverter.ToUInt32(b, i);
+                i += 4;
+                if (i > sz - 4) break;
+                count = BitConverter.ToUInt32(b, i);
+                i += 4;
+                if (i > sz - 4) break;
+                nl = BitConverter.ToInt32(b, i);
+                i += 4;
+                nl *= 2;
+                if (i > sz - nl) break;
+                name = Encoding.Unicode.GetString(b, i, nl);
+                i += nl;
+                Drug d;
+                d = new Drug(name, scancode, price);
+                Storage.Add(d, count);
+            }
+            R.Close();
             Storage.Draw(lvStorage);
         }
-
         private void Form1_Load(object sender, EventArgs e)
         {
         }
-
+        //Додати на склад
         private void btnAdd_Click(object sender, EventArgs e)
         {
             string name;
             UInt64 sc;
             double d_price;
+            //Тестуємо валідність даних
             name = tbName.Text;
             if (name.Length < 3)
             {
@@ -46,18 +88,22 @@ namespace DZ_S1
                 MessageBox.Show("Incorrect input <" + tbPrice.Text + ">, only positive number allowed!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+            //Перераховуєм у формат с фіксованою десятковою комою
             UInt32 price = (UInt32)Math.Round(d_price * 100.0);
+            //Додаємо таблетку до складу
             Drug d;
             d = new Drug(name, sc, price);
             Storage.Add(d, 1);
+            //Оновлюємо зображення склада
             Storage.Draw(lvStorage);
         }
+        //Додати до замовлення
         private void btnSell_Click(object sender, EventArgs e)
         {
             int i;
             if (lvStorage.SelectedIndices.Count != 1) return;
             i = lvStorage.SelectedIndices[0];
-            Drug d = Storage.Reserve(i);
+            Drug? d = Storage.Reserve(i);
             if (d == null) return;
             Bill.Add(d, 1);
             Bill.Draw(lvBill);
@@ -65,19 +111,45 @@ namespace DZ_S1
             lvStorage.Focus();
             lvStorage.Items[i].Selected = true;
         }
-
+        //Видача замовлення
         private void btnCheckout_Click(object sender, EventArgs e)
         {
             Bill.Clear();
             Bill.Draw(lvBill);
         }
+        //Зберігання бази даних у файл
+        private void btnSaveDB_Click(object sender, EventArgs e)
+        {
+            CryptoGamma G = new CryptoGamma();
+            BinaryWriter? W = new BinaryWriter(File.OpenWrite("database"));
+            if (W==null)
+            {
+                MessageBox.Show("Can't store database!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (Storage.WriteAllToFile(W, G) == 0)
+            {
+                W.Flush();
+                W.Close();
+                MessageBox.Show("Database saved!", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                W.Flush();
+                W.Close();
+                MessageBox.Show("Can't store database!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
+    //Клас таблетки
     public class Drug
     {
+        //Дані таблетки - сканкод, ціна, назва, кількість
         private UInt64 scancode;
         private UInt32 price;
         private string name;
         private UInt32 count;
+        //Конструктор
         public Drug(string _name, UInt64 _scancode, UInt32 _price)
         {
             name = _name;
@@ -85,37 +157,46 @@ namespace DZ_S1
             price = _price;
             count = 0;
         }
+        //Отримати сканкод
         public UInt64 GetScancode()
         {
             return scancode;
         }
-        public bool TestScancode(Drug d)
+        //Перевірити, чи співпадають сканкоди таблеток
+        public bool TestScancode(Drug? d)
         {
+            if (d == null) return false;
             return scancode == d.scancode;
         }
+        //Збільшити кількість
         public void AddN(UInt32 N)
         {
             count += N;
         }
+        //Зменшити кількість
         public void SubN(UInt32 N)
         {
             if (N <= count)
                 count -= N;
         }
+        //Конверсія ціни в строку
         public string getPriceAsStr()
         {
             return String.Format("{0}.{1,2:D2}",price/100,price%100);
         }
+        //Конверсія всієї інформації в строку
         public override string ToString()
         {
             return String.Format(
                 "('{0}',{1},{2},{3})",
                 name, scancode, getPriceAsStr(), count);
         }
+        //Отримати кількість
         public UInt32 GetCount()
         {
             return count;
         }
+        //Генеруємо ListViewItem по даним таблетки
         public ListViewItem ToLVI()
         {
             string[] a =
@@ -128,68 +209,123 @@ namespace DZ_S1
             ListViewItem item = new ListViewItem(a);
             return item;
         }
+        //Робимо копію таблетки
         public Drug Clone()
         {
             Drug d = new Drug(name, scancode, price);
             return d;
         }
+        //
+        public byte[] ToBinary()
+        {
+            List<byte> b = new List<byte>();
+            b.AddRange(BitConverter.GetBytes(scancode));
+            b.AddRange(BitConverter.GetBytes(price));
+            b.AddRange(BitConverter.GetBytes(count));
+            b.AddRange(BitConverter.GetBytes((int)(name.Length)));
+            b.AddRange(Encoding.Unicode.GetBytes(name));
+            return b.ToArray();
+        }
     }
-
+    //Клас списку таблеток
     public class DrugList
     {
+        //Список таблеток
         private List<Drug> list;
+        //Конструктор
         public DrugList()
         {
             list = new List<Drug>();
         }
+        //Видаляємо усі таблетки
         public void Clear()
         {
             list.Clear();
         }
-        public int Add(Drug d, UInt32 N)
+        //Додаєемо нову таблетку або оновлюємо кількість
+        public int Add(Drug? d, UInt32 N)
         {
-            Drug ed = list.Find(x => x.TestScancode(d));
+            if (d == null) return 0;
+            //Шукаємо таблетку з таким сканкодом
+            Drug? ed = list.Find(x => x.TestScancode(d));
             if (ed == null)
             {
+                //Не знайшли таку таблетку, додаємо
                 list.Add(d);
                 ed = d;
             }
+            //Оновлюємо кількість
             ed.AddN(N);
             return 0;
         }
-        public Drug Reserve(int index)
+        //Резервуємо таблету для переміщення в інший список
+        public Drug? Reserve(int index)
         {
             if (index >= list.Count) return null;
             if (list[index].GetCount() < 1) return null;
             list[index].SubN(1);
             return list[index].Clone();
         }
-        public Drug Remove(int index)
+        //Видаляємо таблетку
+        public Drug? Remove(int index)
         {
             if (index >= list.Count) return null;
             Drug d = list[index].Clone();
             list.RemoveAt(index);
             return d;
         }
+        //Отримуємо кількість таблеток по індексу
         public UInt32 GetCount(int index)
         {
             if (index >= list.Count) return 0;
             return list[index].GetCount();
         }
+        //Оновлення даних для відображеня
         public void Draw(ListView dest)
         {
-            while (dest.Items.Count>list.Count)
+            //Видаляємо рядкі, якіх вже немає
+            while (dest.Items.Count > list.Count)
             {
-                dest.Items.RemoveAt(dest.Items.Count-1);
+                dest.Items.RemoveAt(dest.Items.Count - 1);
             }
+            //Оновлюємо існуючи або додаємо нові рядки
             for (int i = 0; i < list.Count; i++)
             {
                 if (i < dest.Items.Count)
+                    //Оновлюємо рядок
                     dest.Items[i] = list[i].ToLVI();
                 else
+                    //Додаємо рядок
                     dest.Items.Add(list[i].ToLVI());
             }
         }
-
+        public int WriteAllToFile(BinaryWriter W, CryptoGamma G)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                byte[] ba = list[i].ToBinary();
+                for (int j = 0; j < ba.Length; j++)
+                {
+                    ba[j] ^= G.Get();
+                }
+                W.Write(ba);
+            }
+            return 0;
+        }
+    }
+    //Клас для генерації гами
+    public class CryptoGamma
+    {
+        private UInt64 seed;
+        public CryptoGamma()
+        {
+            seed = 1234567; //Початкове значення
+        }
+        //Отримати наступне значення гами
+        public byte Get()
+        {
+            seed = seed * 6364136223846793005 + 1442695040888963407;
+            return (byte)(seed & 0xFF);
+        }
     }
 }

@@ -69,6 +69,7 @@
             btnSaveDB.TabIndex = 1;
             btnSaveDB.Text = "Save database";
             btnSaveDB.UseVisualStyleBackColor = true;
+            btnSaveDB.Click += btnSaveDB_Click;
             // 
             // lvStorage
             // 
