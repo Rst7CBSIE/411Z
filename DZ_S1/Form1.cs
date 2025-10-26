@@ -36,11 +36,11 @@
                 b[i] ^= G.Get();
             }
             //Ітеруємо усі записи
-            for (int i = 0; i<b.Length;)
+            for (int i = 0; i < b.Length;)
             {
                 Drug d;
                 d = new Drug(b, ref i);
-                if (i<0)
+                if (i < 0)
                 {
                     Debug.Log("Database corrupted????");
                     break;
@@ -83,7 +83,7 @@
             //Додаємо таблетку до складу
             Drug d;
             d = new Drug(name, sc, price);
-            Debug.Log(d+" added to storage");
+            Debug.Log(d + " added to storage");
             Storage.Add(d, 1);
             //Оновлюємо зображення склада
             Storage.Draw(lvStorage);
@@ -116,7 +116,7 @@
             Debug.Log("Save database...");
             CryptoGamma G = new CryptoGamma();
             BinaryWriter? W = new BinaryWriter(File.OpenWrite("database"));
-            if (W==null)
+            if (W == null)
             {
                 Debug.Log("Can't store database!");
                 MessageBox.Show("Can't store database!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -137,6 +137,19 @@
                 MessageBox.Show("Can't store database!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        //Повертаємо усі таблетки з чеку на склад
+        private void btnResetBill_Click(object sender, EventArgs e)
+        {
+            Debug.Log("Reseting bill...");
+            for(Drug? d; (d=Bill.Remove(0))!=null;)
+            {
+                Debug.Log(d + " revert to storage");
+                Storage.Add(d, 0);
+            }
+            Bill.Draw(lvBill);
+            Storage.Draw(lvStorage);
+            Debug.Log("Reseting bill complete");
+        }
     }
     //Клас таблетки
     public class Drug
@@ -146,7 +159,7 @@
         private UInt32 price;
         private string name;
         private UInt32 count;
-        //Конструктор
+        //Конструктор зі змінних
         public Drug(string _name, UInt64 _scancode, UInt32 _price)
         {
             name = _name;
@@ -208,7 +221,7 @@
         public override string ToString()
         {
             return String.Format(
-                "('{0}',{1},{2},{3})",
+                "('{0}',SC={1},P={2},N={3})",
                 name, scancode, getPriceAsStr(), count);
         }
         //Отримати кількість
@@ -230,12 +243,19 @@
             return item;
         }
         //Робимо копію таблетки
-        public Drug Clone()
+        public Drug Clone0()
         {
             Drug d = new Drug(name, scancode, price);
             return d;
         }
-        //
+        //Робимо копію таблетки з кількістю
+        public Drug CloneWithCount()
+        {
+            Drug d = new Drug(name, scancode, price);
+            d.count = count;
+            return d;
+        }
+        //Конвертація в бінарний вигляд для збереження на диск
         public byte[] ToBinary()
         {
             List<byte> b = new List<byte>();
@@ -274,23 +294,25 @@
                 list.Add(d);
                 ed = d;
             }
+            else
+                N += d.GetCount();
             //Оновлюємо кількість
             ed.AddN(N);
             return 0;
         }
-        //Резервуємо таблету для переміщення в інший список
+        //Резервуємо одну таблету для переміщення в інший список
         public Drug? Reserve(int index)
         {
             if (index >= list.Count) return null;
             if (list[index].GetCount() < 1) return null;
             list[index].SubN(1);
-            return list[index].Clone();
+            return list[index].Clone0();
         }
         //Видаляємо таблетку
         public Drug? Remove(int index)
         {
             if (index >= list.Count) return null;
-            Drug d = list[index].Clone();
+            Drug d = list[index].CloneWithCount();
             list.RemoveAt(index);
             return d;
         }
@@ -319,6 +341,7 @@
                     dest.Items.Add(list[i].ToLVI());
             }
         }
+        //Зберегти склад в файл
         public int WriteAllToFile(BinaryWriter W, CryptoGamma G)
         {
             for (int i = 0; i < list.Count; i++)
@@ -348,9 +371,10 @@
             return (byte)(seed & 0xFF);
         }
     }
-
+    //Клас лог-файла
     public class Logger
     {
+        //Додати строку до лог-файла з датою та часом
         public void Log(string s)
         {
             File.AppendAllText("drugstore.log",

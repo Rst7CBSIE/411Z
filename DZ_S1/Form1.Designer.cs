@@ -49,6 +49,7 @@
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
+            btnResetBill = new Button();
             SuspendLayout();
             // 
             // btnLoadDB
@@ -119,17 +120,17 @@
             btnSell.Location = new Point(23, 602);
             btnSell.Name = "btnSell";
             btnSell.Size = new Size(234, 46);
-            btnSell.TabIndex = 4;
+            btnSell.TabIndex = 7;
             btnSell.Text = "Sell";
             btnSell.UseVisualStyleBackColor = true;
             btnSell.Click += btnSell_Click;
             // 
             // btnCheckout
             // 
-            btnCheckout.Location = new Point(1049, 602);
+            btnCheckout.Location = new Point(852, 602);
             btnCheckout.Name = "btnCheckout";
             btnCheckout.Size = new Size(150, 46);
-            btnCheckout.TabIndex = 6;
+            btnCheckout.TabIndex = 8;
             btnCheckout.Text = "Checkout";
             btnCheckout.UseVisualStyleBackColor = true;
             btnCheckout.Click += btnCheckout_Click;
@@ -143,7 +144,7 @@
             lvBill.Location = new Point(23, 654);
             lvBill.Name = "lvBill";
             lvBill.Size = new Size(1311, 186);
-            lvBill.TabIndex = 7;
+            lvBill.TabIndex = 10;
             lvBill.UseCompatibleStateImageBehavior = false;
             lvBill.View = View.Details;
             // 
@@ -172,21 +173,21 @@
             tbName.Location = new Point(353, 534);
             tbName.Name = "tbName";
             tbName.Size = new Size(366, 39);
-            tbName.TabIndex = 8;
+            tbName.TabIndex = 4;
             // 
             // tbScancode
             // 
             tbScancode.Location = new Point(852, 534);
             tbScancode.Name = "tbScancode";
             tbScancode.Size = new Size(200, 39);
-            tbScancode.TabIndex = 8;
+            tbScancode.TabIndex = 5;
             // 
             // tbPrice
             // 
             tbPrice.Location = new Point(1134, 534);
             tbPrice.Name = "tbPrice";
             tbPrice.Size = new Size(200, 39);
-            tbPrice.TabIndex = 8;
+            tbPrice.TabIndex = 6;
             // 
             // label1
             // 
@@ -215,11 +216,22 @@
             label3.TabIndex = 9;
             label3.Text = "Name:";
             // 
+            // btnResetBill
+            // 
+            btnResetBill.Location = new Point(1184, 602);
+            btnResetBill.Name = "btnResetBill";
+            btnResetBill.Size = new Size(150, 46);
+            btnResetBill.TabIndex = 9;
+            btnResetBill.Text = "Reset bill";
+            btnResetBill.UseVisualStyleBackColor = true;
+            btnResetBill.Click += btnResetBill_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(13F, 32F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1607, 845);
+            Controls.Add(btnResetBill);
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
@@ -263,5 +275,6 @@
         private Label label1;
         private Label label2;
         private Label label3;
+        private Button btnResetBill;
     }
 }
