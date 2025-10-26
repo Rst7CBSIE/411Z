@@ -7,19 +7,23 @@
     {
         private DrugList Storage;
         private DrugList Bill;
+        private Logger Debug;
         public Form1()
         {
             InitializeComponent();
             Storage = new DrugList();
             Bill = new DrugList();
+            Debug = new Logger();
         }
         //Загрузка бази даних
         private void btnLoadDB_Click(object sender, EventArgs e)
         {
+            Debug.Log("Load database...");
             CryptoGamma G = new CryptoGamma();
             BinaryReader? R = new BinaryReader(File.OpenRead("database"));
             if (R == null)
             {
+                Debug.Log("Load database error!");
                 MessageBox.Show("Can't load database!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -32,33 +36,19 @@
                 b[i] ^= G.Get();
             }
             //Ітеруємо усі записи
-            for (int i = 0, sz=b.Length; i<sz;)
+            for (int i = 0; i<b.Length;)
             {
-                UInt64 scancode;
-                UInt32 price;
-                UInt32 count;
-                int nl;
-                string name;
-                if (i > sz - 8) break;
-                scancode=BitConverter.ToUInt64(b,i);
-                i += 8;
-                if (i > sz - 4) break;
-                price = BitConverter.ToUInt32(b, i);
-                i += 4;
-                if (i > sz - 4) break;
-                count = BitConverter.ToUInt32(b, i);
-                i += 4;
-                if (i > sz - 4) break;
-                nl = BitConverter.ToInt32(b, i);
-                i += 4;
-                nl *= 2;
-                if (i > sz - nl) break;
-                name = Encoding.Unicode.GetString(b, i, nl);
-                i += nl;
                 Drug d;
-                d = new Drug(name, scancode, price);
-                Storage.Add(d, count);
+                d = new Drug(b, ref i);
+                if (i<0)
+                {
+                    Debug.Log("Database corrupted????");
+                    break;
+                }
+                Debug.Log(d + " loaded!");
+                Storage.Add(d, 0);
             }
+            Debug.Log("Database loaded!");
             R.Close();
             Storage.Draw(lvStorage);
         }
@@ -93,6 +83,7 @@
             //Додаємо таблетку до складу
             Drug d;
             d = new Drug(name, sc, price);
+            Debug.Log(d+" added to storage");
             Storage.Add(d, 1);
             //Оновлюємо зображення склада
             Storage.Draw(lvStorage);
@@ -105,6 +96,7 @@
             i = lvStorage.SelectedIndices[0];
             Drug? d = Storage.Reserve(i);
             if (d == null) return;
+            Debug.Log(d + " added to bill");
             Bill.Add(d, 1);
             Bill.Draw(lvBill);
             Storage.Draw(lvStorage);
@@ -114,27 +106,32 @@
         //Видача замовлення
         private void btnCheckout_Click(object sender, EventArgs e)
         {
+            Debug.Log("Checkout");
             Bill.Clear();
             Bill.Draw(lvBill);
         }
         //Зберігання бази даних у файл
         private void btnSaveDB_Click(object sender, EventArgs e)
         {
+            Debug.Log("Save database...");
             CryptoGamma G = new CryptoGamma();
             BinaryWriter? W = new BinaryWriter(File.OpenWrite("database"));
             if (W==null)
             {
+                Debug.Log("Can't store database!");
                 MessageBox.Show("Can't store database!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (Storage.WriteAllToFile(W, G) == 0)
             {
+                Debug.Log("Database saved!");
                 W.Flush();
                 W.Close();
                 MessageBox.Show("Database saved!", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
+                Debug.Log("Can't store database (2)!");
                 W.Flush();
                 W.Close();
                 MessageBox.Show("Can't store database!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -156,6 +153,29 @@
             scancode = _scancode;
             price = _price;
             count = 0;
+        }
+        //Конструктор з бінарного вигляду
+        public Drug(byte[] b, ref int i)
+        {
+            name = "unknown";
+            int sz = b.Length;
+            int nl;
+            if (i > sz - 8) { i = -1; return; }
+            scancode = BitConverter.ToUInt64(b, i);
+            i += 8;
+            if (i > sz - 4) { i = -1; return; }
+            price = BitConverter.ToUInt32(b, i);
+            i += 4;
+            if (i > sz - 4) { i = -1; return; }
+            count = BitConverter.ToUInt32(b, i);
+            i += 4;
+            if (i > sz - 4) { i = -1; return; }
+            nl = BitConverter.ToInt32(b, i);
+            i += 4;
+            nl *= 2;
+            if (i > sz - nl) { i = -1; return; }
+            name = Encoding.Unicode.GetString(b, i, nl);
+            i += nl;
         }
         //Отримати сканкод
         public UInt64 GetScancode()
@@ -326,6 +346,17 @@
         {
             seed = seed * 6364136223846793005 + 1442695040888963407;
             return (byte)(seed & 0xFF);
+        }
+    }
+
+    public class Logger
+    {
+        public void Log(string s)
+        {
+            File.AppendAllText("drugstore.log",
+                DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss: ") 
+                + s
+                + "\n");
         }
     }
 }
