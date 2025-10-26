@@ -38,11 +38,17 @@
             btnAdd = new Button();
             btnSell = new Button();
             btnCheckout = new Button();
-            listView1 = new ListView();
+            lvBill = new ListView();
             columnHeader6 = new ColumnHeader();
             columnHeader7 = new ColumnHeader();
             columnHeader8 = new ColumnHeader();
             columnHeader9 = new ColumnHeader();
+            tbName = new TextBox();
+            tbScancode = new TextBox();
+            tbPrice = new TextBox();
+            label1 = new Label();
+            label2 = new Label();
+            label3 = new Label();
             SuspendLayout();
             // 
             // btnLoadDB
@@ -67,6 +73,7 @@
             // lvStorage
             // 
             lvStorage.Columns.AddRange(new ColumnHeader[] { columnHeader1, columnHeader2, columnHeader3, columnHeader4 });
+            lvStorage.FullRowSelect = true;
             lvStorage.GridLines = true;
             lvStorage.HeaderStyle = ColumnHeaderStyle.Nonclickable;
             lvStorage.Location = new Point(23, 73);
@@ -104,6 +111,7 @@
             btnAdd.TabIndex = 3;
             btnAdd.Text = "Add to store";
             btnAdd.UseVisualStyleBackColor = true;
+            btnAdd.Click += btnAdd_Click;
             // 
             // btnSell
             // 
@@ -113,6 +121,7 @@
             btnSell.TabIndex = 4;
             btnSell.Text = "Sell";
             btnSell.UseVisualStyleBackColor = true;
+            btnSell.Click += btnSell_Click;
             // 
             // btnCheckout
             // 
@@ -122,18 +131,20 @@
             btnCheckout.TabIndex = 6;
             btnCheckout.Text = "Checkout";
             btnCheckout.UseVisualStyleBackColor = true;
+            btnCheckout.Click += btnCheckout_Click;
             // 
-            // listView1
+            // lvBill
             // 
-            listView1.Columns.AddRange(new ColumnHeader[] { columnHeader6, columnHeader7, columnHeader8, columnHeader9 });
-            listView1.GridLines = true;
-            listView1.HeaderStyle = ColumnHeaderStyle.Nonclickable;
-            listView1.Location = new Point(23, 654);
-            listView1.Name = "listView1";
-            listView1.Size = new Size(1311, 186);
-            listView1.TabIndex = 7;
-            listView1.UseCompatibleStateImageBehavior = false;
-            listView1.View = View.Details;
+            lvBill.Columns.AddRange(new ColumnHeader[] { columnHeader6, columnHeader7, columnHeader8, columnHeader9 });
+            lvBill.FullRowSelect = true;
+            lvBill.GridLines = true;
+            lvBill.HeaderStyle = ColumnHeaderStyle.Nonclickable;
+            lvBill.Location = new Point(23, 654);
+            lvBill.Name = "lvBill";
+            lvBill.Size = new Size(1311, 186);
+            lvBill.TabIndex = 7;
+            lvBill.UseCompatibleStateImageBehavior = false;
+            lvBill.View = View.Details;
             // 
             // columnHeader6
             // 
@@ -155,12 +166,66 @@
             columnHeader9.Text = "Count";
             columnHeader9.Width = 150;
             // 
+            // tbName
+            // 
+            tbName.Location = new Point(353, 534);
+            tbName.Name = "tbName";
+            tbName.Size = new Size(366, 39);
+            tbName.TabIndex = 8;
+            // 
+            // tbScancode
+            // 
+            tbScancode.Location = new Point(852, 534);
+            tbScancode.Name = "tbScancode";
+            tbScancode.Size = new Size(200, 39);
+            tbScancode.TabIndex = 8;
+            // 
+            // tbPrice
+            // 
+            tbPrice.Location = new Point(1134, 534);
+            tbPrice.Name = "tbPrice";
+            tbPrice.Size = new Size(200, 39);
+            tbPrice.TabIndex = 8;
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(1058, 537);
+            label1.Name = "label1";
+            label1.Size = new Size(70, 32);
+            label1.TabIndex = 9;
+            label1.Text = "Price:";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(725, 537);
+            label2.Name = "label2";
+            label2.Size = new Size(121, 32);
+            label2.TabIndex = 9;
+            label2.Text = "Scancode:";
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(263, 537);
+            label3.Name = "label3";
+            label3.Size = new Size(83, 32);
+            label3.TabIndex = 9;
+            label3.Text = "Name:";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(13F, 32F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1607, 845);
-            Controls.Add(listView1);
+            Controls.Add(label3);
+            Controls.Add(label2);
+            Controls.Add(label1);
+            Controls.Add(tbPrice);
+            Controls.Add(tbScancode);
+            Controls.Add(tbName);
+            Controls.Add(lvBill);
             Controls.Add(btnCheckout);
             Controls.Add(btnSell);
             Controls.Add(btnAdd);
@@ -171,6 +236,7 @@
             Text = "Form1";
             Load += Form1_Load;
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -185,10 +251,16 @@
         private Button btnAdd;
         private Button btnSell;
         private Button btnCheckout;
-        private ListView listView1;
+        private ListView lvBill;
         private ColumnHeader columnHeader6;
         private ColumnHeader columnHeader7;
         private ColumnHeader columnHeader8;
         private ColumnHeader columnHeader9;
+        private TextBox tbName;
+        private TextBox tbScancode;
+        private TextBox tbPrice;
+        private Label label1;
+        private Label label2;
+        private Label label3;
     }
 }
