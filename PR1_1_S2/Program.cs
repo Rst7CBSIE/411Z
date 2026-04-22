@@ -37,7 +37,7 @@ namespace PR1_1_S2
             }
             //Результат
             val_max -= val_min;
-            for (int i = 0; i < val_max; i++)
+            for (int i = 0; i <= val_max; i++)
             {
                 for (int j = 0; j < output[i]; j++)
                 {
