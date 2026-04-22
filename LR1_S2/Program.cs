@@ -9,13 +9,13 @@ namespace LR1_S2
 {
     internal class Program
     {
-        static int CountDivs(int[]primes, int v)
+        static uint CountDivs(uint[]primes, ulong v)
         {
-            int count = 1;
+            uint count = 1;
             //Спробуємо ділити на кожне просте
-            for(int i=0; primes[i]!=0; i++)
+            for(uint i=0; primes[i]!=0; i++)
             {
-                int n = 0;
+                uint n = 0;
                 //Рахуємо, скільки разів v діліться на просте
                 while ((v % primes[i])==0)
                 {
@@ -25,7 +25,7 @@ namespace LR1_S2
                 if (n != 0)
                 {
                     //v ділиться на просте
-                    //Оновлюємо кількість ділителів
+                    //Оновлюємо кількість дільників
                     count = count * (n + 1);
                 }
             }
@@ -35,17 +35,17 @@ namespace LR1_S2
         {
             Console.OutputEncoding = Encoding.UTF8; //Дозволити вивод в UTF-8
             //Створюємо таблицю простих чисел
-            int max_prime = 1000;
-            int[] primes = new int[max_prime];
-            int max_prime_sqr = (int)Math.Round(Math.Sqrt(max_prime));
+            uint max_prime = 1000;
+            uint[] primes = new uint[max_prime];
+            uint max_prime_sqr = (uint)Math.Round(Math.Sqrt(max_prime));
             //Решето Ератосфена
-            for (int i=2; i< max_prime_sqr; i++)
+            for (uint i =2; i< max_prime_sqr; i++)
             {
-                for (int j = i*2; j < max_prime; j += i) primes[j] = 1;
+                for (uint j = i*2; j < max_prime; j += i) primes[j] = 1;
             }
             //Пакування массиву
-            int top_prime = 0;
-            for (int i = 2; i < max_prime; i++)
+            uint top_prime = 0;
+            for (uint i = 2; i < max_prime; i++)
             {
                 if (primes[i]==0)
                 {
@@ -54,8 +54,9 @@ namespace LR1_S2
             }
             primes[top_prime] = 0; //Маркер кінця
             Console.WriteLine("Усього " + top_prime + " простих до " + max_prime);
-            int value;
-            int n;
+            ulong value;
+            uint n;
+            //Рахуємо кількість дільників
             value = 12;
             n=CountDivs(primes,value);
             Console.WriteLine(value + " -> " + n);
